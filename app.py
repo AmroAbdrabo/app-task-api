@@ -1,62 +1,26 @@
-from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS  # Make sure CORS is handled if needed
-import os
+from flask import Flask
+from config import Config
+from config import db
+from sub_routes  import sub_api
+from flask_cors import CORS 
+from contract_routes import contract_api
 
-app = Flask(__name__)
-CORS(app)
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'subscriptions.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+def create_app():
+    app = Flask(__name__)
+    CORS(app) # needed since database is on port 5000 and the redux request comes from port 3000
+    app.config.from_object(Config)
 
-class Subscription(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    cost = db.Column(db.Float, nullable=False)
-    duration = db.Column(db.Integer, nullable=False)
+    # Initialize db with the app context
+    with app.app_context():
+        db.init_app(app)
+        db.create_all()  # creates all tables
+    
+    app.register_blueprint(contract_api, url_prefix='/api')
+    app.register_blueprint(sub_api, url_prefix='/api')
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "cost": self.cost,
-            "duration": self.duration
-        }
+    return app
 
-with app.app_context():
-    db.create_all()
-
-@app.route('/api/subscriptions', methods=['GET'])
-def get_subscriptions():
-    subscriptions = Subscription.query.all()
-    return jsonify([sub.to_dict() for sub in subscriptions])
-
-@app.route('/api/subscriptions', methods=['POST'])
-def add_subscription():
-    print("called")
-    data = request.json
-    new_subscription = Subscription(name=data['name'], cost=data['cost'], duration=data['duration'])
-    db.session.add(new_subscription)
-    db.session.commit()
-    return jsonify(new_subscription.to_dict()), 201
-
-@app.route('/api/subscriptions/<int:id>', methods=['PUT'])
-def update_subscription(id):
-    subscription = Subscription.query.get_or_404(id)
-    data = request.json
-    subscription.name = data['name']
-    subscription.cost = data['cost']
-    subscription.duration = data['duration']
-    db.session.commit()
-    return jsonify(subscription.to_dict())
-
-@app.route('/api/subscriptions/<int:id>', methods=['DELETE'])
-def delete_subscription(id):
-    subscription = Subscription.query.get_or_404(id)
-    db.session.delete(subscription)
-    db.session.commit()
-    return jsonify({"message": "Deleted Subscription"}), 200
+app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True)
