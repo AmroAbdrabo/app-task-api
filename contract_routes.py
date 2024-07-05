@@ -11,7 +11,7 @@ def get_contracts():
 @contract_api.route('/contracts', methods=['POST'])
 def add_contract():
     data = request.json
-    new_contract = Contract(name=data['name'], cost=data['cost'], duration=data['duration'])
+    new_contract = Contract(name=data['name'], cost=data['cost'], duration=data['duration'], cycle = data['cycle'])
     db.session.add(new_contract)
     db.session.commit()
     return jsonify(new_contract.to_dict()), 201
@@ -23,6 +23,7 @@ def update_contract(id):
     contract.name = data['name']
     contract.cost = data['cost']
     contract.duration = data['duration']
+    contract.cycle = data['cycle']
     db.session.commit()
     return jsonify(contract.to_dict())
 
