@@ -34,6 +34,7 @@ def get_subscriptions():
 
 @app.route('/api/subscriptions', methods=['POST'])
 def add_subscription():
+    print("called")
     data = request.json
     new_subscription = Subscription(name=data['name'], cost=data['cost'], duration=data['duration'])
     db.session.add(new_subscription)
