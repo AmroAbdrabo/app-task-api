@@ -10,7 +10,7 @@ class Contract(db.Model):
 
     def to_dict(self):
         return {
-            "id": str(self.id),
+            "id": self.id,
             "name": self.name,
             "cost": self.cost,
             "duration": self.duration,

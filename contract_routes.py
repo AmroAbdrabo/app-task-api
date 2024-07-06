@@ -17,7 +17,7 @@ def add_contract():
     db.session.commit()
     return jsonify(new_contract.to_dict()), 201
 
-@contract_api.route('/contracts/<string:id>', methods=['PUT'])
+@contract_api.route('/contracts/<int:id>', methods=['PUT'])
 def update_contract(id):
     print("called put")
     contract = Contract.query.get_or_404(id)
